@@ -1,7 +1,16 @@
 package main
 
-import "fmt"
+import (
+	"log"
+
+	"github.com/petrostrak/distributed-file-storage-in-go/p2p"
+)
 
 func main() {
-	fmt.Println("A Distributed File Storage in Go!")
+	tr := p2p.NewTCPTransport(":3000")
+	if err := tr.ListenAndAccept(); err != nil {
+		log.Fatal(err)
+	}
+
+	select {}
 }

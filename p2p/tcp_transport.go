@@ -62,5 +62,6 @@ func (t *TCPTransport) startAcceptLoop() {
 }
 
 func (t *TCPTransport) handleConn(conn net.Conn) {
-	fmt.Printf("%+v\n", conn)
+	peer := NewTCPPeer(conn, true)
+	fmt.Printf("new incoming connection %+v\n", peer)
 }
