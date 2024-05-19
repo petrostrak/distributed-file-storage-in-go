@@ -69,8 +69,6 @@ func (t *TCPTransport) startAcceptLoop() {
 	}
 }
 
-type Temp struct{}
-
 func (t *TCPTransport) handleConn(conn net.Conn) {
 	peer := NewTCPPeer(conn, true)
 
@@ -81,12 +79,13 @@ func (t *TCPTransport) handleConn(conn net.Conn) {
 	}
 
 	// Read loop
-	msg := &Temp{}
+	msg := &Message{}
 	for {
 		if err := t.TCPTransportOptions.Decoder.Decode(conn, msg); err != nil {
 			fmt.Printf("tcp error: %s\n", err)
 			continue
 		}
+		fmt.Printf("message: %v+\n", msg.Payload)
 	}
 
 }
