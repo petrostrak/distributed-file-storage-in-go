@@ -85,7 +85,10 @@ func (t *TCPTransport) handleConn(conn net.Conn) {
 			fmt.Printf("tcp error: %s\n", err)
 			continue
 		}
-		fmt.Printf("message: %v+\n", msg.Payload)
+
+		msg.From = conn.RemoteAddr()
+
+		fmt.Printf("message: %+v\n", msg)
 	}
 
 }
