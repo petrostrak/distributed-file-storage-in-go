@@ -96,7 +96,7 @@ func (t *TCPTransport) handleConn(conn net.Conn) {
 	for {
 		if err = t.TCPTransportOptions.Decoder.Decode(conn, &rpc); err != nil {
 			fmt.Printf("tcp error: %s\n", err)
-			continue
+			return
 		}
 
 		rpc.From = conn.RemoteAddr()
