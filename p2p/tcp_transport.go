@@ -86,16 +86,16 @@ func (t *TCPTransport) handleConn(conn net.Conn) {
 	}
 
 	// Read loop
-	msg := RPC{}
+	rpc := RPC{}
 	for {
-		if err := t.TCPTransportOptions.Decoder.Decode(conn, &msg); err != nil {
+		if err := t.TCPTransportOptions.Decoder.Decode(conn, &rpc); err != nil {
 			fmt.Printf("tcp error: %s\n", err)
 			continue
 		}
 
-		msg.From = conn.RemoteAddr()
+		rpc.From = conn.RemoteAddr()
 
-		t.rpcChan <- msg
+		t.rpcChan <- rpc
 	}
 
 }
