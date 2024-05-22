@@ -139,6 +139,10 @@ func (s *Store) Delete(key string) error {
 	return os.RemoveAll(path)
 }
 
+func (s *Store) Clear() error {
+	return os.RemoveAll(s.RootDir)
+}
+
 func (s *Store) Has(key string) bool {
 	pathkey := s.PathTransformFunc(key)
 	_, err := os.Stat(s.RootDir + "/" + pathkey.fullpath())

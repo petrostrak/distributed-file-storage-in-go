@@ -6,6 +6,19 @@ import (
 	"testing"
 )
 
+func newStore() *Store {
+	opts := StoreOpts{
+		PathTransformFunc: CASPathTransformFunc,
+	}
+	return NewStore(opts)
+}
+
+func tearDown(t *testing.T, s *Store) {
+	if err := s.Clear(); err != nil {
+		t.Error(err)
+	}
+}
+
 func TestPathTransformFunc(t *testing.T) {
 	key := "momsPics"
 	pathKey := CASPathTransformFunc(key)
@@ -22,11 +35,9 @@ func TestPathTransformFunc(t *testing.T) {
 }
 
 func TestStore(t *testing.T) {
-	opts := StoreOpts{
-		PathTransformFunc: CASPathTransformFunc,
-	}
+	s := newStore()
+	defer tearDown(t, s)
 
-	s := NewStore(opts)
 	key := "mySpecialPic"
 
 	data := []byte("somejpgbytes")
