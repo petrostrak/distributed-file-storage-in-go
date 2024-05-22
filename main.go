@@ -1,33 +1,29 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/petrostrak/distributed-file-storage-in-go/p2p"
 )
 
 func main() {
-	opts := p2p.TCPTransportOps{
+	tcpTransportOpts := p2p.TCPTransportOps{
 		ListenAddr: ":3000",
 		ShakeHands: p2p.NoHandshake,
 		Decoder:    p2p.DefaultDecoder{},
-		OnPeer: func(p p2p.Peerer) error {
-			p.Close()
-			return nil
-		},
 	}
 
-	tr := p2p.NewTCPTransport(opts)
+	tcpTransport := p2p.NewTCPTransport(tcpTransportOpts)
 
-	go func() {
-		for {
-			msg := <-tr.Consume()
-			fmt.Printf("%+v\n", msg)
-		}
-	}()
+	fileServerOpts := FileServerOpts{
+		StorageRoot:       "network",
+		PathTransformFunc: CASPathTransformFunc,
+		Transport:         tcpTransport,
+	}
 
-	if err := tr.ListenAndAccept(); err != nil {
+	s := NewFileServer(fileServerOpts)
+
+	if err := s.Start(); err != nil {
 		log.Fatal(err)
 	}
 
