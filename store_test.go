@@ -43,6 +43,8 @@ func TestStore(t *testing.T) {
 	if string(b) != string(data) {
 		t.Errorf("want %s have %s", data, b)
 	}
+
+	s.Delete(key)
 }
 
 func TestStoreDelete(t *testing.T) {
