@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"os"
 	"strings"
@@ -97,4 +98,30 @@ func (s *Store) Read(key string) (io.Reader, error) {
 	_, err = io.Copy(buf, f)
 
 	return buf, err
+}
+
+func (p PathKey) rootDir() string {
+	path := strings.Split(p.Pathname, "/")
+	if len(path) == 0 {
+		return ""
+	}
+
+	return path[0]
+}
+
+func (s *Store) Delete(key string) error {
+	pathkey := s.PathTransformFunc(key)
+
+	defer func() {
+		log.Printf("deleted [%s] from disk\n", pathkey.Filename)
+	}()
+
+	return os.RemoveAll(pathkey.rootDir())
+}
+
+func (s *Store) Has(key string) bool {
+	pathkey := s.PathTransformFunc(key)
+	_, err := os.Stat(pathkey.fullpath())
+
+	return err != fs.ErrNotExist
 }
