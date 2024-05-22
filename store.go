@@ -134,12 +134,14 @@ func (s *Store) Delete(key string) error {
 		log.Printf("deleted [%s] from disk\n", pathkey.Filename)
 	}()
 
-	return os.RemoveAll(pathkey.rootDir())
+	path := fmt.Sprintf("%s/%s", s.RootDir, pathkey.rootDir())
+
+	return os.RemoveAll(path)
 }
 
 func (s *Store) Has(key string) bool {
 	pathkey := s.PathTransformFunc(key)
-	_, err := os.Stat(pathkey.fullpath())
+	_, err := os.Stat(s.RootDir + "/" + pathkey.fullpath())
 
 	return err != fs.ErrNotExist
 }
