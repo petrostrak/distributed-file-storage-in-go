@@ -12,6 +12,10 @@ import (
 	"strings"
 )
 
+const (
+	defaultRootFolderName = "network"
+)
+
 var DefaultPathTransformFunc = func(key string) PathKey {
 	return PathKey{
 		Pathname: key,
@@ -31,6 +35,7 @@ func (p PathKey) fullpath() string {
 type PathTransformFunc func(string) PathKey
 
 type StoreOpts struct {
+	RootDir string
 	PathTransformFunc
 }
 
@@ -62,6 +67,11 @@ func NewStore(opts StoreOpts) *Store {
 	if opts.PathTransformFunc == nil {
 		opts.PathTransformFunc = DefaultPathTransformFunc
 	}
+
+	if len(opts.RootDir) == 0 {
+		opts.RootDir = defaultRootFolderName
+	}
+
 	return &Store{
 		StoreOpts: opts,
 	}
@@ -70,13 +80,13 @@ func NewStore(opts StoreOpts) *Store {
 func (s *Store) writeStream(key string, r io.Reader) error {
 	pathKey := s.PathTransformFunc(key)
 
-	if err := os.MkdirAll(pathKey.Pathname, os.ModePerm); err != nil {
+	if err := os.MkdirAll(s.RootDir+"/"+pathKey.Pathname, os.ModePerm); err != nil {
 		return err
 	}
 
 	filename := pathKey.fullpath()
 
-	f, err := os.Create(filename)
+	f, err := os.Create(s.RootDir + "/" + filename)
 	if err != nil {
 		return err
 	}
@@ -92,7 +102,7 @@ func (s *Store) writeStream(key string, r io.Reader) error {
 
 func (s *Store) readStream(key string) (io.ReadCloser, error) {
 	pathKey := s.PathTransformFunc(key)
-	return os.Open(pathKey.fullpath())
+	return os.Open(s.RootDir + "/" + pathKey.fullpath())
 }
 
 func (s *Store) Read(key string) (io.Reader, error) {
