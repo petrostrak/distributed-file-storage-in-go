@@ -12,7 +12,12 @@ import (
 	"strings"
 )
 
-var DefaultPathTransformFunc = func(key string) string { return key }
+var DefaultPathTransformFunc = func(key string) PathKey {
+	return PathKey{
+		Pathname: key,
+		Filename: key,
+	}
+}
 
 type PathKey struct {
 	Pathname string
@@ -54,6 +59,9 @@ func CASPathTransformFunc(key string) PathKey {
 }
 
 func NewStore(opts StoreOpts) *Store {
+	if opts.PathTransformFunc == nil {
+		opts.PathTransformFunc = DefaultPathTransformFunc
+	}
 	return &Store{
 		StoreOpts: opts,
 	}
