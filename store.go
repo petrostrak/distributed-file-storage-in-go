@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"log"
 	"os"
 	"strings"
@@ -147,5 +147,5 @@ func (s *Store) Has(key string) bool {
 	pathkey := s.PathTransformFunc(key)
 	_, err := os.Stat(s.RootDir + "/" + pathkey.fullpath())
 
-	return err != fs.ErrNotExist
+	return !errors.Is(err, os.ErrNotExist)
 }
