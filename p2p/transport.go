@@ -6,6 +6,7 @@ import "net"
 type Peerer interface {
 	RemoteAddr() net.Addr
 	Close() error
+	Send([]byte) error
 }
 
 // Transporter is anything that handles communication between

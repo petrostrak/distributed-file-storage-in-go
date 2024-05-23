@@ -33,6 +33,11 @@ func (p *TCPPeer) RemoteAddr() net.Addr {
 	return p.conn.RemoteAddr()
 }
 
+func (p *TCPPeer) Send(b []byte) error {
+	_, err := p.conn.Write(b)
+	return err
+}
+
 type TCPTransportOps struct {
 	ListenAddr string
 	ShakeHands HandshakeFunc
