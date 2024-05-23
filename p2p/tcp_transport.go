@@ -38,20 +38,20 @@ func (p *TCPPeer) Send(b []byte) error {
 	return err
 }
 
-type TCPTransportOps struct {
+type TCPTransportOpts struct {
 	ListenAddr string
 	ShakeHands HandshakeFunc
 	Decoder    Decoder
 }
 
 type TCPTransport struct {
-	TCPTransportOptions TCPTransportOps
+	TCPTransportOptions TCPTransportOpts
 	listener            net.Listener
 	rpcChan             chan RPC
 	OnPeer              func(Peerer) error
 }
 
-func NewTCPTransport(opts TCPTransportOps) *TCPTransport {
+func NewTCPTransport(opts TCPTransportOpts) *TCPTransport {
 	return &TCPTransport{
 		TCPTransportOptions: opts,
 		rpcChan:             make(chan RPC),

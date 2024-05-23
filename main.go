@@ -7,7 +7,7 @@ import (
 )
 
 func makeServer(addr string, nodes ...string) *FileServer {
-	tcpTransportOpts := p2p.TCPTransportOps{
+	tcpTransportOpts := p2p.TCPTransportOpts{
 		ListenAddr: addr,
 		ShakeHands: p2p.NoHandshake,
 		Decoder:    p2p.DefaultDecoder{},
