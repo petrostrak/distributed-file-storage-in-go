@@ -4,9 +4,8 @@ import "net"
 
 // Peerer is an interface that represents the remote node.
 type Peerer interface {
-	RemoteAddr() net.Addr
+	net.Conn
 	Close() error
-	Send([]byte) error
 }
 
 // Transporter is anything that handles communication between
