@@ -77,11 +77,11 @@ func (t *TCPTransport) startAcceptLoop() {
 
 		fmt.Printf("new incoming connection %+v\n", conn)
 
-		go t.handleConn(conn)
+		go t.handleConn(conn, false)
 	}
 }
 
-func (t *TCPTransport) handleConn(conn net.Conn) {
+func (t *TCPTransport) handleConn(conn net.Conn, outbound bool) {
 	var err error
 
 	defer func() {
@@ -89,14 +89,16 @@ func (t *TCPTransport) handleConn(conn net.Conn) {
 		conn.Close()
 	}()
 
-	peer := NewTCPPeer(conn, true)
+	peer := NewTCPPeer(conn, outbound)
 
 	if err = t.TCPTransportOptions.ShakeHands(peer); err != nil {
 		return
 	}
 
-	if err = t.TCPTransportOptions.OnPeer(peer); err != nil {
-		return
+	if t.TCPTransportOptions.OnPeer != nil {
+		if err := t.TCPTransportOptions.OnPeer(peer); err != nil {
+			return
+		}
 	}
 
 	// Read loop
@@ -122,4 +124,16 @@ func (t *TCPTransport) Consume() <-chan RPC {
 
 func (t *TCPTransport) Close() error {
 	return t.listener.Close()
+}
+
+// Dial implements the transport interface.
+func (t *TCPTransport) Dial(addr string) error {
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		return err
+	}
+
+	go t.handleConn(conn, true)
+
+	return nil
 }
