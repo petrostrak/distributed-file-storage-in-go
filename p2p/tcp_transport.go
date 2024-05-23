@@ -29,6 +29,10 @@ func (p *TCPPeer) Close() error {
 	return p.conn.Close()
 }
 
+func (p *TCPPeer) RemoteAddr() net.Addr {
+	return p.conn.RemoteAddr()
+}
+
 type TCPTransportOps struct {
 	ListenAddr string
 	ShakeHands HandshakeFunc

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/petrostrak/distributed-file-storage-in-go/p2p"
 )
@@ -19,6 +20,9 @@ type FileServer struct {
 	FileServerOpts
 	store *Store
 	quit  chan struct{}
+
+	mu    sync.Mutex
+	peers map[string]p2p.Peerer
 }
 
 func NewFileServer(opts FileServerOpts) *FileServer {
@@ -31,6 +35,7 @@ func NewFileServer(opts FileServerOpts) *FileServer {
 		FileServerOpts: opts,
 		store:          NewStore(storeOpts),
 		quit:           make(chan struct{}),
+		peers:          make(map[string]p2p.Peerer),
 	}
 }
 
@@ -77,6 +82,17 @@ func (s *FileServer) bootstrapNetwork() error {
 			}
 		}(addr)
 	}
+
+	return nil
+}
+
+func (s *FileServer) OnPeer(p p2p.Peerer) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.peers[p.RemoteAddr().String()] = p
+
+	log.Printf("connected with remote %s\n", p.RemoteAddr())
 
 	return nil
 }

@@ -1,7 +1,10 @@
 package p2p
 
+import "net"
+
 // Peerer is an interface that represents the remote node.
 type Peerer interface {
+	RemoteAddr() net.Addr
 	Close() error
 }
 
