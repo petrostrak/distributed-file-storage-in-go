@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"github.com/petrostrak/distributed-file-storage-in-go/p2p"
 )
@@ -23,9 +24,12 @@ func main() {
 
 	s := NewFileServer(fileServerOpts)
 
+	go func() {
+		time.Sleep(3 * time.Second)
+		s.Stop()
+	}()
+
 	if err := s.Start(); err != nil {
 		log.Fatal(err)
 	}
-
-	select {}
 }
