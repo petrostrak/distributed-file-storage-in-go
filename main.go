@@ -16,20 +16,20 @@ func makeServer(addr string, nodes ...string) *FileServer {
 	tcpTransport := p2p.NewTCPTransport(tcpTransportOpts)
 
 	fileServerOpts := FileServerOpts{
-		StorageRoot:       addr + "network",
+		StorageRoot:       addr + "_network",
 		PathTransformFunc: CASPathTransformFunc,
 		Transport:         tcpTransport,
 		BootstrapNodes:    nodes,
 	}
 
 	s := NewFileServer(fileServerOpts)
-	tcpTransportOpts.OnPeer = s.OnPeer
+	tcpTransport.OnPeer = s.OnPeer
 
 	return s
 }
 
 func main() {
-	s1 := makeServer(":3000", ":4000")
+	s1 := makeServer(":3000", "")
 	s2 := makeServer(":4000", ":3000")
 
 	go func() {

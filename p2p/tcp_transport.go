@@ -42,13 +42,13 @@ type TCPTransportOps struct {
 	ListenAddr string
 	ShakeHands HandshakeFunc
 	Decoder    Decoder
-	OnPeer     func(Peerer) error
 }
 
 type TCPTransport struct {
 	TCPTransportOptions TCPTransportOps
 	listener            net.Listener
 	rpcChan             chan RPC
+	OnPeer              func(Peerer) error
 }
 
 func NewTCPTransport(opts TCPTransportOps) *TCPTransport {
@@ -104,8 +104,8 @@ func (t *TCPTransport) handleConn(conn net.Conn, outbound bool) {
 		return
 	}
 
-	if t.TCPTransportOptions.OnPeer != nil {
-		if err := t.TCPTransportOptions.OnPeer(peer); err != nil {
+	if t.OnPeer != nil {
+		if err := t.OnPeer(peer); err != nil {
 			return
 		}
 	}
