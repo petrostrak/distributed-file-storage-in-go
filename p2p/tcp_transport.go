@@ -39,7 +39,7 @@ type TCPTransport struct {
 	TCPTransportOptions TCPTransportOpts
 	listener            net.Listener
 	rpcChan             chan RPC
-	OnPeer              func(Peerer) error
+	OnPeer              func(Peer) error
 }
 
 func NewTCPTransport(opts TCPTransportOpts) *TCPTransport {
@@ -136,4 +136,10 @@ func (t *TCPTransport) Dial(addr string) error {
 	go t.handleConn(conn, true)
 
 	return nil
+}
+
+// Addr implements the Transport interface return the address
+// the transport is accepting connections.
+func (t *TCPTransport) Addr() string {
+	return t.ListenAddr
 }
