@@ -130,14 +130,14 @@ func (p PathKey) rootDir() string {
 	return path[0]
 }
 
-func (s *Store) Delete(key string) error {
+func (s *Store) Delete(id, key string) error {
 	pathkey := s.PathTransformFunc(key)
 
 	defer func() {
 		log.Printf("deleted [%s] from disk\n", pathkey.Filename)
 	}()
 
-	path := fmt.Sprintf("%s/%s", s.RootDir, pathkey.rootDir())
+	path := fmt.Sprintf("%s/%s/%s", s.RootDir, id, pathkey.rootDir())
 
 	return os.RemoveAll(path)
 }
