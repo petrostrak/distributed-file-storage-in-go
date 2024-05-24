@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/gob"
 	"fmt"
 	"io"
@@ -65,7 +66,11 @@ func (s *FileServer) loop() {
 	for {
 		select {
 		case msg := <-s.Transport.Consume():
-			fmt.Println(msg)
+			var p Payload
+			if err := gob.NewDecoder(bytes.NewReader(msg.Payload)).Decode(&p); err != nil {
+				log.Fatal(err)
+			}
+			fmt.Printf("%+v\n", string(p.Data))
 		case <-s.quit:
 			return
 		}
@@ -99,18 +104,30 @@ func (s *FileServer) OnPeer(p p2p.Peerer) error {
 	return nil
 }
 
-func (s *FileServer) StoreFile(key string, r io.Reader) error {
-	// 1. Store the file to disk
-	// 2. broadcast the file to all known peers in the network
-	return nil
-}
-
 type Payload struct {
 	Key  string
 	Data []byte
 }
 
-func (s *FileServer) broadcast(p Payload) error {
+func (s *FileServer) StoreFile(key string, r io.Reader) error {
+	buf := new(bytes.Buffer)
+	tee := io.TeeReader(r, buf)
+
+	// 1. Store the file to disk
+	if err := s.store.Write(key, tee); err != nil {
+		return err
+	}
+
+	p := &Payload{
+		Key:  key,
+		Data: buf.Bytes(),
+	}
+
+	// 2. broadcast the file to all known peers in the network
+	return s.broadcast(p)
+}
+
+func (s *FileServer) broadcast(p *Payload) error {
 	peers := []io.Writer{}
 
 	for _, peer := range s.peers {

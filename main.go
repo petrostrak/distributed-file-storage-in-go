@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"log"
+	"time"
 
 	"github.com/petrostrak/distributed-file-storage-in-go/p2p"
 )
@@ -37,7 +38,12 @@ func main() {
 		log.Fatal(s1.Start())
 	}()
 
-	s2.Start()
+	time.Sleep(time.Second)
+	go s2.Start()
+	time.Sleep(time.Second)
+
 	data := bytes.NewReader([]byte("a data file"))
 	s2.StoreFile("key", data)
+
+	select {}
 }
