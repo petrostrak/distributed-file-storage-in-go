@@ -1,7 +1,7 @@
 build:
 	@go build -o bin/fs
 
-run:
+run: build
 	@./bin/fs
 
 test:
