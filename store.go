@@ -76,32 +76,28 @@ func NewStore(opts StoreOpts) *Store {
 		StoreOpts: opts,
 	}
 }
-
-func (s *Store) Write(key string, r io.Reader) error {
-	return s.writeStream(key, r)
+func (s *Store) Write(id string, key string, r io.Reader) (int64, error) {
+	return s.writeStream(id, key, r)
 }
 
-func (s *Store) writeStream(key string, r io.Reader) error {
+func (s *Store) openFileForWriting(id string, key string) (*os.File, error) {
 	pathKey := s.PathTransformFunc(key)
-
-	if err := os.MkdirAll(s.RootDir+"/"+pathKey.Pathname, os.ModePerm); err != nil {
-		return err
+	pathNameWithRoot := fmt.Sprintf("%s/%s/%s", s.RootDir, id, pathKey.Pathname)
+	if err := os.MkdirAll(pathNameWithRoot, os.ModePerm); err != nil {
+		return nil, err
 	}
 
-	filename := pathKey.fullpath()
+	fullPathWithRoot := fmt.Sprintf("%s/%s/%s", s.RootDir, id, pathKey.fullpath())
 
-	f, err := os.Create(s.RootDir + "/" + filename)
+	return os.Create(fullPathWithRoot)
+}
+
+func (s *Store) writeStream(id string, key string, r io.Reader) (int64, error) {
+	f, err := s.openFileForWriting(id, key)
 	if err != nil {
-		return err
+		return 0, err
 	}
-
-	n, err := io.Copy(f, r)
-	if err != nil {
-		return err
-	}
-	log.Printf("written (%d) bytes to disk: %s\n", n, filename)
-
-	return nil
+	return io.Copy(f, r)
 }
 
 func (s *Store) readStream(id string, key string) (int64, io.ReadCloser, error) {
