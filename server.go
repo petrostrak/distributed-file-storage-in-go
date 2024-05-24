@@ -266,3 +266,45 @@ func (s *FileServer) handleMessageStoreFile(from string, msg MessageStoreFile) e
 
 	return nil
 }
+
+func (s *FileServer) Get(key string) (io.Reader, error) {
+	if s.store.Has(s.ID, key) {
+		fmt.Printf("[%s] serving file (%s) from local disk\n", s.Transport.Addr(), key)
+		_, r, err := s.store.Read(s.ID, key)
+		return r, err
+	}
+
+	fmt.Printf("[%s] dont have file (%s) locally, fetching from network...\n", s.Transport.Addr(), key)
+
+	msg := Message{
+		Payload: MessageGetFile{
+			ID:  s.ID,
+			Key: hashKey(key),
+		},
+	}
+
+	if err := s.broadcast(&msg); err != nil {
+		return nil, err
+	}
+
+	time.Sleep(time.Millisecond * 500)
+
+	for _, peer := range s.peers {
+		// First read the file size so we can limit the amount of bytes that we read
+		// from the connection, so it will not keep hanging.
+		var fileSize int64
+		binary.Read(peer, binary.LittleEndian, &fileSize)
+
+		n, err := s.store.WriteDecrypt(s.EncKey, s.ID, key, io.LimitReader(peer, fileSize))
+		if err != nil {
+			return nil, err
+		}
+
+		fmt.Printf("[%s] received (%d) bytes over the network from (%s)", s.Transport.Addr(), n, peer.RemoteAddr())
+
+		peer.CloseStream()
+	}
+
+	_, r, err := s.store.Read(s.ID, key)
+	return r, err
+}
