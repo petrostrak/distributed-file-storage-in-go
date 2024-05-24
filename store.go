@@ -152,3 +152,12 @@ func (s *Store) Has(key string) bool {
 
 	return !errors.Is(err, os.ErrNotExist)
 }
+
+func (s *Store) WriteDecrypt(encKey []byte, id string, key string, r io.Reader) (int64, error) {
+	f, err := s.openFileForWriting(id, key)
+	if err != nil {
+		return 0, err
+	}
+	n, err := copyDecrypt(encKey, r, f)
+	return int64(n), err
+}
