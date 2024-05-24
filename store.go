@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
 	"errors"
