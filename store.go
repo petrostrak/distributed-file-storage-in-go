@@ -146,10 +146,11 @@ func (s *Store) Clear() error {
 	return os.RemoveAll(s.RootDir)
 }
 
-func (s *Store) Has(key string) bool {
-	pathkey := s.PathTransformFunc(key)
-	_, err := os.Stat(s.RootDir + "/" + pathkey.fullpath())
+func (s *Store) Has(id string, key string) bool {
+	pathKey := s.PathTransformFunc(key)
+	fullPathWithRoot := fmt.Sprintf("%s/%s/%s", s.RootDir, id, pathKey.fullpath())
 
+	_, err := os.Stat(fullPathWithRoot)
 	return !errors.Is(err, os.ErrNotExist)
 }
 

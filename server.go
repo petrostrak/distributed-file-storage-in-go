@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/petrostrak/distributed-file-storage-in-go/p2p"
 )
@@ -113,23 +114,23 @@ func (s *FileServer) bootstrapNetwork() error {
 		}
 
 		go func(addr string) {
+			fmt.Printf("[%s] attemping to connect with remote %s\n", s.Transport.Addr(), addr)
 			if err := s.Transport.Dial(addr); err != nil {
-				log.Println("dial error", err)
+				log.Println("dial error: ", err)
 			}
-
 		}(addr)
 	}
 
 	return nil
 }
 
-func (s *FileServer) OnPeer(p p2p.Peerer) error {
+func (s *FileServer) OnPeer(p p2p.Peer) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	s.peers[p.RemoteAddr().String()] = p
 
-	log.Printf("connected with remote %s\n", p.RemoteAddr())
+	log.Printf("connected with remote %s", p.RemoteAddr())
 
 	return nil
 }
@@ -144,25 +145,45 @@ type DataMessage struct {
 	Data []byte
 }
 
-func (s *FileServer) StoreFile(key string, r io.Reader) error {
-	buf := new(bytes.Buffer)
-	tee := io.TeeReader(r, buf)
+func (s *FileServer) Store(key string, r io.Reader) error {
+	var (
+		fileBuffer = new(bytes.Buffer)
+		tee        = io.TeeReader(r, fileBuffer)
+	)
 
-	// 1. Store the file to disk
-	if err := s.store.Write(key, tee); err != nil {
+	size, err := s.store.Write(s.ID, key, tee)
+	if err != nil {
 		return err
 	}
 
-	p := &DataMessage{
-		Key:  key,
-		Data: buf.Bytes(),
+	msg := Message{
+		Payload: MessageStoreFile{
+			ID:   s.ID,
+			Key:  hashKey(key),
+			Size: size + 16,
+		},
 	}
 
-	// 2. broadcast the file to all known peers in the network
-	return s.broadcast(&Message{
-		From:    "todo",
-		Payload: p,
-	})
+	if err := s.broadcast(&msg); err != nil {
+		return err
+	}
+
+	time.Sleep(time.Millisecond * 5)
+
+	peers := []io.Writer{}
+	for _, peer := range s.peers {
+		peers = append(peers, peer)
+	}
+	mw := io.MultiWriter(peers...)
+	mw.Write([]byte{p2p.IncomingStream})
+	n, err := copyEncrypt(s.EncKey, fileBuffer, mw)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("[%s] received and written (%d) bytes to disk\n", s.Transport.Addr(), n)
+
+	return nil
 }
 
 func (s *FileServer) broadcast(msg *Message) error {
